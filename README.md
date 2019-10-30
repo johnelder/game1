@@ -1,6 +1,6 @@
-# Project Title
+# TUG Game1
 
-One Paragraph of project description goes here
+Just an empty shell for IO games - Still under development
 
 ## Getting Started
 
