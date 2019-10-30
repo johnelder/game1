@@ -1,0 +1,101 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>TUG Game1</title>
+  <meta name="author" content="Jonathan Elder - Tech Unlimited Group">
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+
+</head>
+
+<body>
+  <canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+  
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.0/dist/socket.io.js"></script>
+  <script>
+    var ctx = document.getElementById("ctx");
+    var context = ctx.getContext('2d');
+    
+    //Resize canvas
+    initialize();
+    function initialize() {
+       window.addEventListener('resize', resizeCanvas, false);
+       resizeCanvas();
+    }
+    function redraw() {
+       context.strokeStyle = 'blue';
+       context.lineWidth = '1';
+       context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
+    };
+    function getSize(){
+      var self = {
+        x:0,
+        y:0
+      }
+      
+      if( typeof( window.innerWidth ) == 'number' ) {
+        //Non-IE
+        self.x = window.innerWidth;
+        self.y = window.innerHeight;
+      } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
+        //IE 6+ in 'standards compliant mode'
+        self.x = document.documentElement.clientWidth;
+        self.y = document.documentElement.clientHeight;
+      } else if( document.body && ( document.body.clientWidth ||          document.body.clientHeight ) ) {
+        //IE 4 compatible
+        self.x = document.body.clientWidth;
+        self.y = document.body.clientHeight;
+      }
+      
+      return self;
+    };
+    function resizeCanvas() {
+      var x=0;
+      var y=0;
+      
+      
+      
+      ctx.width = getSize().x;
+      ctx.height = getSize().y;
+      redraw();
+    };
+    
+    
+    var socket = io();
+    var tmpDat = {};
+  	socket.on('u',function(data){
+  		if(tmpDat != data) {
+  		  console.log(data);
+  		  tmpDat = data;
+  		} else {
+  		  console.log('no change')
+  		}
+  		//console.log(tmpDat)
+  	});
+      
+  </script>
+  
+  
+  
+  <div id="joinGame">
+      <h1>The Game</h1>
+      <h2>Just another IO game.</h2>
+      <form id="joinForm">
+        <input id="name" placeholder="Optional Name" type='text' />
+        <button id="joinButton">Join Game</button>
+      </form>
+      <div id="gameDesc">
+        <p>Heave down pressgang man-of-war killick transom reef bring a spring upon her cable square-rigged mutiny hulk. Fluke heave down keel booty avast scuttle snow blow the man down mizzen prow. Hardtack black spot poop deck rutters chantey scourge of the seven seas clap of thunder crow's nest spike doubloon.</p>
+
+        <p>Overhaul gabion Letter of Marque belaying pin swing the lead trysail salmagundi gangway hands Brethren of the Coast. Coxswain shrouds jib trysail aft rum cog mutiny tack Admiral of the Black. Hulk jib yardarm holystone sheet crimp lookout skysail mutiny quarterdeck.</p>
+
+        <p>Smartly chandler lugsail scurvy galleon lad skysail tack ye fore. Sutler loaded to the gunwalls rutters scallywag crow's nest tack grapple avast keel Buccaneer. Killick Sea Legs measured fer yer chains clipper parley plunder gabion crimp hearties grapple.</p>
+      </div>
+  </div>
+  
+</body>
+</html>

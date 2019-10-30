@@ -1,0 +1,11 @@
+{
+ "debug": true,
+ "frameRate":75,
+ "port":2000,
+ "db": {
+  "dbHost":"localhost",
+  "dbUser":"node1",
+  "dbPass":"node1125"
+ }
+ 
+}
