@@ -76,6 +76,7 @@ exports.Entity = function(id){
 				y:self.y,
 				hp:self.hp,
 				score:self.score,
+				name:self.name
 			}
 		} else if (type === 'r') {
 			return {
@@ -88,7 +89,7 @@ exports.Entity = function(id){
     
 	//Add to players list
 	if (id != undefined) {
-		exports.Enties.list[id] = self;
+		exports.Entities.list[id] = self;
 	}
 	return self;
 };
@@ -96,7 +97,7 @@ exports.Entity = function(id){
 
 
 
-exports.Player = function(id){
+exports.Player = function(id,name){
 	var self = exports.Entity();
 	var xc =0;
 	checkId:while(xc < 100){
@@ -113,10 +114,34 @@ exports.Player = function(id){
 		}
 	}
 	self.id = id;
-	self.name = "P"+id;
+	self.name = name || "P"+id;
 	self.score = 0;
 	// self.type = "player";
 	
+	self.onJoin = function(socket,name) {
+		var player = exports.Player(socket.id,name);
+		// socket.on('keyPress',function(data){
+		// 	if(data.inputId === 'left')
+		// 		player.pressingLeft = data.state;
+		// 	else if(data.inputId === 'right')
+		// 		player.pressingRight = data.state;
+		// 	else if(data.inputId === 'up')
+		// 		player.pressingUp = data.state;
+		// 	else if(data.inputId === 'down')
+		// 		player.pressingDown = data.state;
+		// 	else if(data.inputId === 'attack')
+		// 		player.pressingAttack = data.state;
+		// 	else if(data.inputId === 'mouseAngle')
+		// 		player.mouseAngle = data.state;
+		// });
+	}
+
+	self.onLeave = function(socket) {
+		log.debug('Removing player: '+socket.id);
+		delete exports.Players.list[socket.id];
+	};
+
+
 	//var su_die = self.die;
 	self.die = function(){
 	    //TODO:play seound/animation

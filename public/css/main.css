@@ -26,9 +26,11 @@ box-shadow: 10px 10px 30px -6px rgba(0,0,0,0.75);
 }
 
 
-
+#joinGame #nameDiv{
+    display:inline-flex;
+}
 #joinGame input{
-    display:block;
+    display:inline;
     padding: 10px 16px;
     border: 1px solid #fff;
     border-radius: 19px;
@@ -37,7 +39,14 @@ box-shadow: 10px 10px 30px -6px rgba(0,0,0,0.75);
     min-width: 45%;
     margin:auto;
 }
-
+#randomButton img{
+    height:2em;
+}
+#joinGame #randomButton {
+    margin-top: -2px;
+    padding: 3px 12px;
+    display: inline-flex;
+}
 #joinGame button{
     display: block;
     margin: auto;
@@ -51,13 +60,28 @@ box-shadow: 10px 10px 30px -6px rgba(0,0,0,0.75);
     cursor: pointer;
     transition: 0.3s;
 }
+#randomButton img:hover{
+    -webkit-box-shadow: 0px 0px 44px -7px rgba(0,13,255,1);
+    -moz-box-shadow: 0px 0px 44px -7px rgba(0,13,255,1);
+    box-shadow: 0px 0px 44px -7px rgba(0,13,255,1);
+}
 #joinGame button:hover{
     background-color: #0808fda8;
     -webkit-box-shadow: 0px 0px 44px -7px rgba(0,13,255,1);
     -moz-box-shadow: 0px 0px 44px -7px rgba(0,13,255,1);
     box-shadow: 0px 0px 44px -7px rgba(0,13,255,1);
 }
-
+#joinGame #dupeName {
+    display: block;
+    display:none;
+    color:#f00;
+    border: 1px solid #f00;
+    border-radius: 19px;
+    padding: 10px 16px;
+    margin:auto;
+    max-width: 16em;
+    margin-top: 1em;
+}
 #gameDesc {
     border-radius: 19px;
     border: 1px solid;

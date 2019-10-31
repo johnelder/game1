@@ -25,6 +25,7 @@ var port = cfg.get("port");
 var ent = require("./modules/entities.js");
 var ut = require("./modules/utilities.js");
 var log = require("./modules/log.js");
+var nameGen = require("./modules/nameGen.js");
 
 
 /*--------------------------------------------------------------------
@@ -52,8 +53,32 @@ io.sockets.on('connection', function(socket){
 	//socket.id = Math.random();
 	log.update("Socket "+socket.id+" connected.")
 	Sockets.list[socket.id] = socket;
-	
+    
+    socket.on('signIn',function(data){
+        var username = data.username;
+        if(data.username == "") {
+            username = nameGen.getName();
+        }
+
+        if (ut.objFind(username,"name",Players.list) == undefined){
+            console.log("Name Unique");
+            console.log('Player joining: '+username)
+            Players.onJoin(socket,username);
+
+
+        } else {
+            console.log("Name Duplicate")
+            socket.emit('dupeName',{"name":username})
+        }
+
+        
+		// socket.emit('signInResponse',{success:true});
+	});
+    socket.on('rndName',function(data){
+        socket.emit('rndName',{"name":nameGen.getName()});
+    })
 	socket.on('disconnect',function(){
+        Players.onLeave(socket);
 		delete Sockets.list[socket.id];
  		//Players.onDisconnect(socket);
 	});
@@ -61,10 +86,10 @@ io.sockets.on('connection', function(socket){
 
 
 // Create dummy players
-for(var i = 0; i < 10; i++){
-	var t = ent.Player('P');
+// for(var i = 0; i < 2; i++){
+// 	var t = ent.Player('P');
 
-}
+// }
 
 
     
@@ -100,7 +125,8 @@ setInterval(function(){
         frameCount = 0;
         
         // console.log(updatePack);
-
+        // console.log(Players.list)
+        // console.log(nameGen.getName())
     }
     
     

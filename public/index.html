@@ -15,21 +15,46 @@
 <body>
   <canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
   
+
+  <div id="joinGame">
+    <h1>The Game</h1>
+    <h2>Just another IO game.</h2>
+    <div id="nameDiv"><input id="nameBox" placeholder="Optional Name" type='text' /><a id="randomButton"><img src="assets/img/die1-white.svg" /></a></div>
+    <div id="dupeName">Sorry. That name is already in use!</div>
+    <button id="joinButton">Join Game</button>
+
+    <div id="gameDesc">
+      <p>Heave down pressgang man-of-war killick transom reef bring a spring upon her cable square-rigged mutiny hulk. Fluke heave down keel booty avast scuttle snow blow the man down mizzen prow. Hardtack black spot poop deck rutters chantey scourge of the seven seas clap of thunder crow's nest spike doubloon.</p>
+
+      <p>Overhaul gabion Letter of Marque belaying pin swing the lead trysail salmagundi gangway hands Brethren of the Coast. Coxswain shrouds jib trysail aft rum cog mutiny tack Admiral of the Black. Hulk jib yardarm holystone sheet crimp lookout skysail mutiny quarterdeck.</p>
+
+      <p>Smartly chandler lugsail scurvy galleon lad skysail tack ye fore. Sutler loaded to the gunwalls rutters scallywag crow's nest tack grapple avast keel Buccaneer. Killick Sea Legs measured fer yer chains clipper parley plunder gabion crimp hearties grapple.</p>
+    </div>
+  </div>
+
+
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.0/dist/socket.io.js"></script>
   <script>
-    var ctx = document.getElementById("ctx");
-    var context = ctx.getContext('2d');
-    
+    var elm = {};
+    elm.ctx = document.getElementById("ctx");
+    elm.context = ctx.getContext('2d');
+    elm.nameBox = document.getElementById("nameBox");
+    elm.joinButton = document.getElementById("joinButton");
+    elm.dupeName = document.getElementById("dupeName");
+    elm.rndButton = document.getElementById("randomButton");
+
     //Resize canvas
     initialize();
     function initialize() {
        window.addEventListener('resize', resizeCanvas, false);
        resizeCanvas();
-    }
+
+
+    };
     function redraw() {
-       context.strokeStyle = 'blue';
-       context.lineWidth = '1';
-       context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
+       elm.context.strokeStyle = 'blue';
+       elm.context.lineWidth = '1';
+       elm.context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
     };
     function getSize(){
       var self = {
@@ -59,43 +84,62 @@
       
       
       
-      ctx.width = getSize().x;
-      ctx.height = getSize().y;
+      elm.ctx.width = getSize().x;
+      elm.ctx.height = getSize().y;
       redraw();
     };
+
     
+
+
+
+    //Images
+    var img = {};
+	  img.p = new Image();
+    img.p.src = '/assets/img/player-ball-white.svg';
+    img.r1 = new Image();
+    img.r1.src = '/assets/img/rock1-small.svg';
+    // img.map = new Image();
+    // img.map.src = '/client/img/map.png';
+
     
+    elm.joinButton.onclick = function(){
+        console.log("Clicked join...")
+        socket.emit('signIn',{username:elm.nameBox.value});
+        elm.dupeName.style.display = "none";
+    };
+    elm.rndButton.onclick = function(){
+      socket.emit('rndName',{});
+    }
+      
     var socket = io();
     var tmpDat = {};
+    socket.on('rndName',function(data){
+      elm.nameBox.value = data.name;
+    })
+    socket.on('dupeName',function(data){
+      elm.dupeName.innerHTML = "Sorry. The name '"+data.name+"'' is already in use!";
+      elm.dupeName.style.display = "block";
+      elm.nameBox.value = data.name;
+    });
   	socket.on('u',function(data){
   		if(tmpDat != data) {
-  		  console.log(data);
+  		  // console.log(data);
   		  tmpDat = data;
   		} else {
   		  console.log('no change')
   		}
   		//console.log(tmpDat)
   	});
-      
+
+
+
+
   </script>
   
   
   
-  <div id="joinGame">
-      <h1>The Game</h1>
-      <h2>Just another IO game.</h2>
-      <form id="joinForm">
-        <input id="name" placeholder="Optional Name" type='text' />
-        <button id="joinButton">Join Game</button>
-      </form>
-      <div id="gameDesc">
-        <p>Heave down pressgang man-of-war killick transom reef bring a spring upon her cable square-rigged mutiny hulk. Fluke heave down keel booty avast scuttle snow blow the man down mizzen prow. Hardtack black spot poop deck rutters chantey scourge of the seven seas clap of thunder crow's nest spike doubloon.</p>
 
-        <p>Overhaul gabion Letter of Marque belaying pin swing the lead trysail salmagundi gangway hands Brethren of the Coast. Coxswain shrouds jib trysail aft rum cog mutiny tack Admiral of the Black. Hulk jib yardarm holystone sheet crimp lookout skysail mutiny quarterdeck.</p>
-
-        <p>Smartly chandler lugsail scurvy galleon lad skysail tack ye fore. Sutler loaded to the gunwalls rutters scallywag crow's nest tack grapple avast keel Buccaneer. Killick Sea Legs measured fer yer chains clipper parley plunder gabion crimp hearties grapple.</p>
-      </div>
-  </div>
   
 </body>
 </html>
