@@ -41,13 +41,15 @@ app.get('/',function(req, res) {
 });
 app.use('/',express.static(__dirname + '/public'));
 serv.listen(port);
-console.log("Server started. Listening on port "+port);
+log.update("Server started. Listening on port "+port);
 
 
 var Players = ent.Player();
 Players.list = ent.Players.list;
 var Sockets = {list:{}};
-ent.list= {};
+var Entities = ent.Entity();
+Entities.list = ent.Entities.list;
+// ent.list= {};
 
 io.sockets.on('connection', function(socket){
 	//socket.id = Math.random();
@@ -61,13 +63,11 @@ io.sockets.on('connection', function(socket){
         }
 
         if (ut.objFind(username,"name",Players.list) == undefined){
-            console.log("Name Unique");
-            console.log('Player joining: '+username)
+
+            log.update('Player joining: '+username)
             Players.onJoin(socket,username);
-
-
         } else {
-            console.log("Name Duplicate")
+
             socket.emit('dupeName',{"name":username})
         }
 
@@ -78,22 +78,25 @@ io.sockets.on('connection', function(socket){
         socket.emit('rndName',{"name":nameGen.getName()});
     })
 	socket.on('disconnect',function(){
-        Players.onLeave(socket);
+        Players.onLeave(socket,Sockets.list[socket.id].pid);
+        
 		delete Sockets.list[socket.id];
  		//Players.onDisconnect(socket);
 	});
 });
 
 
-// Create dummy players
-// for(var i = 0; i < 2; i++){
-// 	var t = ent.Player('P');
+// Create dummy entities
+for(var i = 0; i < 3; i++){
+    var x = Math.floor(Math.random()*300)-150
+    var y = Math.floor(Math.random()*300)-150
+	var t = ent.Entity(undefined,"rock",x,y);
 
-// }
+}
 
 
     
-var frameReset = 50;
+var frameReset = 100;
 var frameCount = 0;
 
 //Game loop
@@ -101,32 +104,53 @@ setInterval(function(){
     //Game Loop
 
     
+
+    // Update players
     var players = Players.list;
     
-    
-    var updatePack = {p:{}};
+    var updatePack = {};
     for(var i in players){
-        // console.log(i)
-        updatePack.p[i] = players[i].getPack('u');
+        var player = players[i];
+        player.update();
+        if(Object.entries(players[i].updates).length != 0) {
+            updatePack[player.id] = players[i].getUpdatePack();
+        }
+        
     }
 
-    for (i in Sockets.list){
-        var socket = Sockets.list[i];
-        // socket.emit('i',initPack);
-        socket.emit('u',updatePack);
-        // socket.emit('r',removePack);
+
+    //TODO: update entities
+
+
+    //
+
+
+
+    if (Object.entries(updatePack).length != 0) {
+        for (i in Sockets.list){
+            var socket = Sockets.list[i];
+            // socket.emit('i',initPack);
+            socket.emit('u',updatePack); 
+            // socket.emit('r',removePack);
+        }    
+        updatePack = {};
     }
 
-    // console.log(Players.list)
+
+
+    
     
     
     frameCount++
     if (frameCount > frameReset) {
         frameCount = 0;
-        
-        // console.log(updatePack);
-        // console.log(Players.list)
-        // console.log(nameGen.getName())
+        // var eInitPack = Entities.getInitAll();
+        // var pInitPack = Players.getInitAll();
+        // var initPack = {...eInitPack,...pInitPack};
+        // console.log({...eInitPack,...pInitPack});
+         console.log(updatePack);
+        //  console.log(Players.list)
+
     }
     
     

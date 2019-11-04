@@ -13,7 +13,7 @@
 </head>
 
 <body>
-  <canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+  <canvas id="canvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
   
 
   <div id="joinGame">
@@ -35,13 +35,25 @@
 
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.0/dist/socket.io.js"></script>
   <script>
+    var WIDTH = 500;
+    var HEIGHT = 500;
+
     var elm = {};
-    elm.ctx = document.getElementById("ctx");
-    elm.context = ctx.getContext('2d');
+    elm.canvas = document.getElementById("canvas");
+    elm.ctx = elm.canvas.getContext('2d');
     elm.nameBox = document.getElementById("nameBox");
     elm.joinButton = document.getElementById("joinButton");
     elm.dupeName = document.getElementById("dupeName");
     elm.rndButton = document.getElementById("randomButton");
+    elm.joinForm = document.getElementById("joinGame");
+
+    window.onbeforeunload = function (e) {
+        // Cancel the event
+        e.preventDefault();
+
+        // Chrome requires returnValue to be set
+        e.returnValue = 'Really want to quit the game?';
+    };
 
     //Resize canvas
     initialize();
@@ -52,9 +64,9 @@
 
     };
     function redraw() {
-       elm.context.strokeStyle = 'blue';
-       elm.context.lineWidth = '1';
-       elm.context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
+       elm.ctx.strokeStyle = 'blue';
+       elm.ctx.lineWidth = '1';
+       elm.ctx.strokeRect(0, 0, window.innerWidth, window.innerHeight);
     };
     function getSize(){
       var self = {
@@ -81,11 +93,12 @@
     function resizeCanvas() {
       var x=0;
       var y=0;
+      WIDTH = getSize().x;
+      HEIGHT = getSize().y;
       
       
-      
-      elm.ctx.width = getSize().x;
-      elm.ctx.height = getSize().y;
+      elm.canvas.width = WIDTH;
+      elm.canvas.height = HEIGHT;
       redraw();
     };
 
@@ -95,25 +108,112 @@
 
     //Images
     var img = {};
-	  img.p = new Image();
-    img.p.src = '/assets/img/player-ball-white.svg';
+	  img.P1 = new Image();
+    img.P1.src = '/assets/img/player-ball-white.svg';
     img.r1 = new Image();
-    img.r1.src = '/assets/img/rock1-small.svg';
+    img.r1.src = '/assets/img/rock1.svg';
+    img.r2 = new Image();
+    img.r2.src = '/assets/img/rock1.svg';
+    img.r3 = new Image();
+    img.r3.src = '/assets/img/rock1.svg';
     // img.map = new Image();
     // img.map.src = '/client/img/map.png';
 
-    
     elm.joinButton.onclick = function(){
-        console.log("Clicked join...")
         socket.emit('signIn',{username:elm.nameBox.value});
         elm.dupeName.style.display = "none";
+        
     };
     elm.rndButton.onclick = function(){
       socket.emit('rndName',{});
     }
+
+    var Player = function(initPack){
+      var self = {};
+      self.id = initPack.id;
+      self.name = initPack.name;
+      self.x = initPack.x;
+      self.y = initPack.y;
+      self.hp = initPack.hp;
+      self.maxHp = initPack.maxHp;
+      self.score = initPack.score;
       
+      
+
+      self.draw = function(){
+        var x = self.x - Player.list[selfId].x + WIDTH/2;
+        var y = self.y - Player.list[selfId].y + HEIGHT/2;
+        
+        var hpWidth = 30 * self.hp / self.hpMax;
+        elm.ctx.fillStyle = 'red';
+        elm.ctx.fillRect(x - hpWidth/2,y - 40,hpWidth,4);
+        
+        //TODO:CHANGE WIDTH
+        var width = img[initPack.img].width*2;
+        var height = img[initPack.img].height*2;
+        
+        elm.ctx.drawImage(img[initPack.img],
+          0,0,img[initPack.img].width,img[initPack.img].height,
+          x-width/2,y-height/2,width,height);
+        
+        //canvas.fillText(self.score,self.x,self.y-60);
+      }
+      
+      Player.list[self.id] = self;
+      
+      
+      return self;
+    }
+	  
+    Player.list = {};
+
+    var Entity = function(initPack){
+      var self = {};
+      self.id = initPack.id;
+      self.name = initPack.name || "";
+      self.x = initPack.x;
+      self.y = initPack.y;
+      self.hp = initPack.hp;
+      self.maxHp = initPack.maxHp;
+      self.score = initPack.score || 0;
+      
+      
+
+      self.draw = function(){
+        
+        var x = self.x - Player.list[selfId].x + WIDTH/2;
+        var y = self.y - Player.list[selfId].y + HEIGHT/2;
+        
+       
+
+        // var hpWidth = 30 * self.hp / self.hpMax;
+        // elm.ctx.fillStyle = 'red';
+        // elm.ctx.fillRect(x - hpWidth/2,y - 40,hpWidth,4);
+   
+        var width = initPack.w*2;
+        var height = initPack.h*2;
+        
+        
+        elm.ctx.beginPath();
+        elm.ctx.drawImage(img[initPack.img],
+          0,0,img[initPack.img].width,img[initPack.img].height,
+          x-width/2,y-height/2,width,height);
+        
+        // elm.ctx.fillText("test",self.x,self.y-60);
+      }
+      
+      Entity.list[self.id] = self;      
+      return self;
+    }
+	  
+    Entity.list = {};
+    
+
+
     var socket = io();
     var tmpDat = {};
+    var selfId;
+
     socket.on('rndName',function(data){
       elm.nameBox.value = data.name;
     })
@@ -123,17 +223,91 @@
       elm.nameBox.value = data.name;
     });
   	socket.on('u',function(data){
-  		if(tmpDat != data) {
-  		  // console.log(data);
-  		  tmpDat = data;
-  		} else {
-  		  console.log('no change')
-  		}
-  		//console.log(tmpDat)
+      if(selfId){
+        Object.keys(data).forEach(function(key){
+          if(key.charAt(0) == "P") {
+            Object.keys(data[key]).forEach(function(dKey){
+              Player.list[key][dKey] = data[key][dKey];
+            });
+          }
+        });
+      }
+
   	});
+    socket.on('init',function(data){
+      if(data.selfId){
+        selfId = data.selfId;
+        elm.joinForm.style.display = "none";
+      }
+      Object.keys(data.init).forEach(function(key){
+        var ent = data.init[key];
+        if(ent.id.charAt(0) == "P"){
+          new Player(ent);
+        } else {
+          new Entity(ent);
+        }
+        
+      });
+      
+    });
+
+    
+    
+    
 
 
 
+
+    var keyCodes = {
+      68:"d",
+      83:"s",
+      65:"a",
+      87:"w",
+      16:"sh"
+      // 32:"space"
+    };
+
+
+  document.onkeydown = function(event){
+    var keyPress = event.keyCode;
+    
+    if(keyCodes.hasOwnProperty(keyPress)){   
+      event.preventDefault();
+      socket.emit('io', {1:keyPress});
+    }	
+	}
+	document.onkeyup = function(event){
+    var keyPress = event.keyCode;
+      if(keyCodes.hasOwnProperty(keyPress)){   
+        socket.emit('io', {0:keyPress});
+      }
+	}
+
+
+  var frc = 0;
+  var frtime = new Date()
+  setInterval(function(){
+    frc++;
+    if(new Date() - frtime > 1000){
+      // console.log(frc);
+      frc = 0;
+      frtime = new Date()
+    }
+		if(selfId) {
+      
+      elm.ctx.clearRect(0,0,WIDTH,HEIGHT);
+      
+      //drawMap();
+      //drawScore();
+      for(var i in Player.list) {
+        Player.list[i].draw();
+      }
+      for (var i in Entity.list) {
+        Entity.list[i].draw();
+      }
+    }
+		
+	},15);
 
   </script>
   

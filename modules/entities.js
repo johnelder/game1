@@ -1,15 +1,52 @@
 // var cfg = require("../config/config.js");
 var log = require("./log.js");
+var ut = require("./utilities.js");
+
 exports.Players = {	list:{} };
 exports.Entities = { list:{} };
 
+var keyCodes = {
+    68:"d",
+    83:"s",
+    65:"a",
+	87:"w",
+	16:"sh"
+    // 32:"space"
+  };
 
+var entTypes = {
+	rock:{
+		img:"r",
+		images:3,
+		maxHp:120,
+		clip:true,
+		w:15,
+		h:15,
+		idKey:"r",
+		maxSpwn:1000,
+	},
+	tree:{
+		img:"t",
+		images:3,
+		maxHp:50,
+		clip:true,
+		idKey:"t",
+		maxSpwn:1000
+	}
+}
 
-exports.Entity = function(id){
+var updateKeys = [
+
+];
+var initKeys = ["id","x","y","r","img","w","h","hitw","hith","hp","name","score"];
+
+exports.Entity = function(id,type,x,y,img){
+
 	var self = {
-		id:"",
-		x:250,
-		y:250,
+		id:id,
+		x:x || 250,
+		y:y || 250,
+		img:img,
 		spdX:0,
 		spdY:0,
 		w:10,
@@ -18,21 +55,64 @@ exports.Entity = function(id){
 		invincible: false,
 		hp:100,
 		maxHp:100,
+		maxSpd:0,
 		remove:false,
-		// type:"default",
+		type:type,
 		dead:false,
 		deadfor:0,
-		u:null,
+		updates:{},
 	};
+	if(entTypes[type]){
+		var bp = entTypes[type];
+		if(id === undefined){
+			id = ut.createId(exports.Entities.list,entTypes[type].idKey,null,entTypes[type].maxSpwn);
+		}
+		if(bp.img){
+			self.img = bp.img;
+			if(bp.images) {
+				self.img += (Math.floor(Math.random()*bp.images)+1);
+			}			
+		}
+		self.maxHp = bp.maxHp || self.maxHp;
+		self.maxSpd = bp.maxSpd || self.maxSpd;
+		self.invincible = bp.invincible || self.invincible;
+		self.clip = bp.clip || self.clip;
+		self.id = id || self.id;
+		self.w = bp.w || self.w;
+		self.h = bp.h || self.h;
+	}
+	
+	self.hp = self.maxHp;
 	
 	self.update = function(){
 		self.move();
-		
 	};
-	
+	self.getInit = function(){
+		var res = {};
+		initKeys.forEach(function(key){
+			res[key] = self[key];
+		})
+		return res;
+	}
+	self.getInitAll = function(){
+		var res = {};
+		var list = self.list;
+		for(var i in list){
+			var ent = list[i]
+			res[i] = ent.getInit();
+		}
+
+		return res;
+	}
 	self.move = function(){
-		self.x += self.spdX;
-		self.y += self.spdY;
+		if(self.spdX != 0){
+			self.x += self.spdX;
+			self.updates.x = true;
+		}
+		if(self.spdY != 0) {
+			self.y += self.spdY;
+			self.updates.y = true;
+		}
 	};
 	
 	self.hit = function(dmg){
@@ -68,23 +148,16 @@ exports.Entity = function(id){
     	self.deadfor = 0;
     };
     
-    self.getPack = function(type){
-		if (type === 'u') {
-			return {
-				id:self.id,
-				x:self.x,
-				y:self.y,
-				hp:self.hp,
-				score:self.score,
-				name:self.name
+    self.getUpdatePack = function(){
+		var ret = {};
+		Object.keys(self.updates).forEach(function(key){
+			if(self.updates[key]) {
+				ret[key] = self[key];
 			}
-		} else if (type === 'r') {
-			return {
-				id:self.id
-			}
-		} else {
-			return false;
-		}
+		});
+		self.updates = {}
+
+		return ret;
 	}
     
 	//Add to players list
@@ -105,7 +178,6 @@ exports.Player = function(id,name){
 		if(id=='P'){
 			var pid = 'P' + parseInt(Math.random()*500);
 			if (exports.Players.list[pid]){
-				console.log('dupe id')
 				continue checkId;
 			} else {
 				id = pid;
@@ -116,35 +188,62 @@ exports.Player = function(id,name){
 	self.id = id;
 	self.name = name || "P"+id;
 	self.score = 0;
-	// self.type = "player";
+	self.maxSpd = 4;
+	self.runFactor = 3;
+	self.pressing = {
+		'w':false,
+		'a':false,
+		's':false,
+		'd':false,
+		'sh':false,
+		'lMouse':false,
+		'rMouse':false
+	}
+	self.img = 'P1';
 	
 	self.onJoin = function(socket,name) {
-		var player = exports.Player(socket.id,name);
-		// socket.on('keyPress',function(data){
-		// 	if(data.inputId === 'left')
-		// 		player.pressingLeft = data.state;
-		// 	else if(data.inputId === 'right')
-		// 		player.pressingRight = data.state;
-		// 	else if(data.inputId === 'up')
-		// 		player.pressingUp = data.state;
-		// 	else if(data.inputId === 'down')
-		// 		player.pressingDown = data.state;
-		// 	else if(data.inputId === 'attack')
-		// 		player.pressingAttack = data.state;
-		// 	else if(data.inputId === 'mouseAngle')
-		// 		player.mouseAngle = data.state;
-		// });
+		
+		var	pid = ut.createId(exports.Players.list,"P",null,1000);
+		
+		
+		socket.pid = pid;
+
+
+		var player = exports.Player(pid,name);
+		socket.on('io',function(data){
+			if (data.hasOwnProperty('1')) {
+				player.pressing[keyCodes[data['1']]] = true;
+			} else if(data.hasOwnProperty(0)){
+				player.pressing[keyCodes[data['0']]] = false;
+			}
+		});
+
+
+		var initPack = exports.createInit();
+		console.log(initPack);
+		socket.emit('init',{
+			selfId:pid,
+			init:initPack
+			// player:Player.getAllInitPack(),
+			// bullet:Bullet.getAllInitPack(),
+		})
+		socket.broadcast.emit('init',{
+			// selfId:pid,
+			init:initPack
+			// player:Player.getAllInitPack(),
+			// bullet:Bullet.getAllInitPack(),
+		})
 	}
 
-	self.onLeave = function(socket) {
-		log.debug('Removing player: '+socket.id);
-		delete exports.Players.list[socket.id];
+	self.onLeave = function(socket,pid) {
+		log.debug('Removing player: '+ pid);
+		delete exports.Players.list[pid];
 	};
 
 
 	//var su_die = self.die;
 	self.die = function(){
-	    //TODO:play seound/animation
+	    //TODO:play sound/animation
 	    log.warn('Player '+id+' has died!');
 	    self.dead=true;
 	    //su_die();
@@ -165,19 +264,32 @@ exports.Player = function(id,name){
 
 
 	self.updateSpd = function(){
-		if(self.pressingRight)
-			self.spdX = self.maxSpd;
-		else if(self.pressingLeft)
-			self.spdX = -self.maxSpd;
-		else
-			self.spdX = 0;
+		var setSpd = self.maxSpd;
+		if(self.pressing.sh){
+			setSpd = self.maxSpd * self.runFactor;
+		}
+		if(self.pressing.d) {
+			self.spdX = ut.toNum(self.spdX,setSpd);
+		} else if(self.pressing.a){
+			self.spdX = ut.toNum(self.spdX,-setSpd);
+		} else {
+			if(self.spdX != 0){
+				self.spdX = ut.toNum(self.spdX,0);
+			}
+			
+		}
+		if(self.pressing.w){
+			self.spdY = ut.toNum(self.spdY,-setSpd);
+		} else if(self.pressing.s){
+			self.spdY = ut.toNum(self.spdY,setSpd);
+		} else {
+			if(self.spdY != 0){
+				self.spdY = ut.toNum(self.spdY,0);
+			}	
+		}
+
 		
-		if(self.pressingUp)
-			self.spdY = -self.maxSpd;
-		else if(self.pressingDown)
-			self.spdY = self.maxSpd;
-		else
-			self.spdY = 0;		
+		
 	};
 	
 	//Add to players list
@@ -186,5 +298,18 @@ exports.Player = function(id,name){
 	}
 	return self;
 };
-
-
+// var Ent = exports.Entity;
+exports.createInit = function(){
+	var res = {};
+	
+	for(var i in exports.Entities.list){
+		var ent = exports.Entities.list[i]
+		res[i] = ent.getInit();
+	}
+	for(var i in exports.Players.list){
+		var ent = exports.Players.list[i]
+		res[i] = ent.getInit();
+	}
+		
+	return res;
+}

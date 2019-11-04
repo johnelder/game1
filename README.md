@@ -2,6 +2,14 @@
 
 Just an empty shell for IO games - Still under development
 
+## Development Notes 10-31-19
+- Init packet
+  - all entity states
+  - x,y,r,etc...
+  - image list
+  - control binding
+
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.

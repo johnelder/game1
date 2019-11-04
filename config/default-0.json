@@ -1,6 +1,6 @@
 {
  "debug": true,
- "frameRate":75,
+ "frameRate":15,
  "port":2000,
  "db": {
   "dbHost":"localhost",

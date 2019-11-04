@@ -18,4 +18,30 @@ exports.objFind = function(v,k,o){
   return result;
 }
 
+exports.createId = function(obj,key,num,max){
+    var loopCount = 0
+    max = max || 1000;
+    num = num || Math.floor(Math.random() * max);
+    key = key || "x";
+    checkKey:while(loopCount < max){
+        var tmpId = key + num;
+        if (obj[tmpId]){
+            loopCount++;
+            continue checkKey;
+        } else {
+            id = tmpId;
+            break checkKey;
+        }
+    }
+    return tmpId;
+}
 
+exports.toNum = function(num,target,chng = 0.5){
+    var newNum = target;
+    if(num > target){
+        newNum = num - chng;
+    } else if(num < target){
+        newNum = num + chng;
+    }
+    return newNum;
+}
