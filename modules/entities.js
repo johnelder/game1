@@ -10,8 +10,11 @@ var keyCodes = {
     83:"s",
     65:"a",
 	87:"w",
-	16:"sh"
-    // 32:"space"
+	16:"sh",
+	'm1':'m1',
+	'm2':'m2',
+	'm3':'m3',
+    32:"space"
   };
 
 var entTypes = {
@@ -38,7 +41,7 @@ var entTypes = {
 var updateKeys = [
 
 ];
-var initKeys = ["id","x","y","r","img","w","h","hitw","hith","hp","name","score"];
+var initKeys = ["id","x","y","rt","img","w","h","hitw","hith","hp","name","score"];
 
 exports.Entity = function(id,type,x,y,img){
 
@@ -46,6 +49,7 @@ exports.Entity = function(id,type,x,y,img){
 		id:id,
 		x:x || 250,
 		y:y || 250,
+		rt:0,
 		img:img,
 		spdX:0,
 		spdY:0,
@@ -105,14 +109,30 @@ exports.Entity = function(id,type,x,y,img){
 		return res;
 	}
 	self.move = function(){
-		if(self.spdX != 0){
-			self.x += self.spdX;
+
+		// Mouse rotational control
+		if(self.spdY != 0){
+			self.x -= self.spdY * Math.sin(self.rt);
+			self.y += self.spdY * Math.cos(self.rt);
 			self.updates.x = true;
+			self.updates.y = true
 		}
-		if(self.spdY != 0) {
-			self.y += self.spdY;
-			self.updates.y = true;
+		if(self.spdX != 0){
+			self.x += self.spdX * Math.sin(self.rt + (Math.PI*0.5));
+			self.y -= self.spdX * Math.cos(self.rt+ (Math.PI*0.5));
+			self.updates.x = true;
+			self.updates.y = true
 		}
+
+		// WASD directional control
+		// if(self.spdX != 0){
+		// 	self.x += self.spdX;
+		// 	self.updates.x = true;
+		// }
+		// if(self.spdY != 0) {
+		// 	self.y += self.spdY;
+		// 	self.updates.y = true;
+		// }
 	};
 	
 	self.hit = function(dmg){
@@ -196,8 +216,10 @@ exports.Player = function(id,name){
 		's':false,
 		'd':false,
 		'sh':false,
-		'lMouse':false,
-		'rMouse':false
+		'sp':false,
+		'm1':false,
+		'm2':false,
+		'm3':false
 	}
 	self.img = 'P1';
 	
@@ -215,12 +237,15 @@ exports.Player = function(id,name){
 				player.pressing[keyCodes[data['1']]] = true;
 			} else if(data.hasOwnProperty(0)){
 				player.pressing[keyCodes[data['0']]] = false;
+			} else if(data.hasOwnProperty('rt')){
+				player.rt = data['rt'];
+				player.updates.rt = true;
 			}
 		});
 
 
 		var initPack = exports.createInit();
-		console.log(initPack);
+		// console.log(initPack);
 		socket.emit('init',{
 			selfId:pid,
 			init:initPack

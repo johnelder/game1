@@ -109,7 +109,8 @@
     //Images
     var img = {};
 	  img.P1 = new Image();
-    img.P1.src = '/assets/img/player-ball-white.svg';
+    img.P1.src = '/assets/img/td-chr1.svg';
+    // img.P1.src = '/assets/img/rock1.svg';
     img.r1 = new Image();
     img.r1.src = '/assets/img/rock1.svg';
     img.r2 = new Image();
@@ -137,6 +138,7 @@
       self.hp = initPack.hp;
       self.maxHp = initPack.maxHp;
       self.score = initPack.score;
+      self.rt = initPack.rt;
       
       
 
@@ -152,10 +154,24 @@
         var width = img[initPack.img].width*2;
         var height = img[initPack.img].height*2;
         
-        elm.ctx.drawImage(img[initPack.img],
-          0,0,img[initPack.img].width,img[initPack.img].height,
-          x-width/2,y-height/2,width,height);
+
+        elm.ctx.save();
+        elm.ctx.translate(x-width/2,y-height/2) //chang position
+        elm.ctx.translate(width/2, height/2); // change origin center
+        elm.ctx.rotate(self.rt); //rotate
+        elm.ctx.translate(-width/2, -height/2); // re-change origin
         
+
+
+        elm.ctx.drawImage(img[initPack.img],
+        0,0,width,height);
+        // elm.ctx.strokeStyle = '#f00';  // some color/style
+        // elm.ctx.lineWidth = 2;
+        // elm.ctx.strokeRect(0, 0, width, height);
+        
+        elm.ctx.restore()
+        
+            
         //canvas.fillText(self.score,self.x,self.y-60);
       }
       
@@ -195,6 +211,8 @@
         
         
         elm.ctx.beginPath();
+
+        
         elm.ctx.drawImage(img[initPack.img],
           0,0,img[initPack.img].width,img[initPack.img].height,
           x-width/2,y-height/2,width,height);
@@ -282,7 +300,34 @@
         socket.emit('io', {0:keyPress});
       }
 	}
+	document.onmousedown = function(event){
+    
+    if(event.which == 1){
+      socket.emit('io',{1:'m1'});
+    } else if(event.which == 2){
+      socket.emit('io',{1:'m2'});
+    } else if(event.which == 3){
+      socket.emit('io',{1:'m3'});
+    }
 
+		// socket.emit('io',{inputId:'attack',state:true});
+  }
+  document.oncontextmenu = function(event){
+    event.preventDefault();
+  }
+	document.onmouseup = function(event){
+    if(event.which == 1){
+      socket.emit('io',{0:'m1'});
+    } else if(event.which == 2){
+      socket.emit('io',{0:'m2'});
+    } else if(event.which == 3){
+      socket.emit('io',{0:'m3'});
+    }
+	}
+	document.onmousemove = function(event){
+    var angle = (Math.PI + Math.atan2(-event.clientX + WIDTH/2, event.clientY - HEIGHT/2));
+		socket.emit('io',{'rt':angle});
+	}
 
   var frc = 0;
   var frtime = new Date()
